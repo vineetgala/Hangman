@@ -1,0 +1,204 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 13:40:12 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Vineet\2021 Spring Semester\EE337\Keil\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJ
+                    -ECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #pragma large
+   2          #include <at89c5131.h>
+   3          #include "lcd.h"    //Header file with LCD interfacing functions
+   4          #include "serial.c" //C file with UART interfacing functions
+   5          sbit LED=P1^7;
+   6          
+   7          //Main function
+   8          void main(void)
+   9          {
+  10   1        //ch - receives character from PC via UART
+  11   1        //i,j - loop variables/counters
+  12   1        //score - counts number of correct guesses for a word
+  13   1        //mistakes - counts number of incorrect letters entered so far
+  14   1        //found - used as a flag to show if a letter has been found in the word
+  15   1        //words[][] - used to store list of words
+  16   1        //len[] - used to store the length of each word (4/5/6)
+  17   1        //letters - used to check if a letter has already been input previously
+  18   1        //If a user inputs the same letter again  for a word, my code ignores it - correct or incorrect
+  19   1        unsigned char ch=0,i,j,score=6,mistakes=0,found=0;
+  20   1        code unsigned char words[][6]={"mini",
+  21   1        "micro",
+  22   1        "micron",
+  23   1        "root",
+  24   1        "pizza",
+  25   1        "hostel",
+  26   1        "heat",
+  27   1        "short",
+  28   1        "ground",
+  29   1        "test",
+  30   1        "house",
+  31   1        "county",
+  32   1        "shoe",
+  33   1        "socks",
+  34   1        "drinks",
+  35   1        "food",
+  36   1        "water",
+  37   1        "orange",
+  38   1        "drop",
+  39   1        "hairy",
+  40   1        "singer",
+  41   1        "film",
+  42   1        "sound",
+  43   1        "double",
+  44   1        "wall",
+  45   1        "steel",
+  46   1        "travel",
+  47   1        "bank",
+  48   1        "fixed",
+  49   1        "prince",
+  50   1        "king",
+  51   1        "queen",
+  52   1        "bishop",
+  53   1        "pawn",
+  54   1        "chess",
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 13:40:12 PAGE 2   
+
+  55   1        "knight",
+  56   1        "rook",
+  57   1        "check",
+  58   1        "winner",
+  59   1        "bike",
+  60   1        "cycle",
+  61   1        "runner",
+  62   1        "swim",
+  63   1        "plant",
+  64   1        "fruits",
+  65   1        "root",
+  66   1        "light",
+  67   1        "mirror",
+  68   1        "pick",
+  69   1        "proof",
+  70   1        "bottle",
+  71   1        "ship",
+  72   1        "fight",
+  73   1        "battle",
+  74   1        "fort",
+  75   1        "mount",
+  76   1        "braces",
+  77   1        "spot",
+  78   1        "board",
+  79   1        "sports",
+  80   1        "real",
+  81   1        "truth",
+  82   1        "really",
+  83   1        "open",
+  84   1        "close",
+  85   1        "outlet",
+  86   1        "shop",
+  87   1        "flyer",
+  88   1        "window",
+  89   1        "safe",
+  90   1        "email",
+  91   1        "search",
+  92   1        "here",
+  93   1        "flash",
+  94   1        "string",
+  95   1        "tool",
+  96   1        "debug",
+  97   1        "ignore",
+  98   1        "warn",
+  99   1        "build",
+ 100   1        "serial",
+ 101   1        "true",
+ 102   1        "catch",
+ 103   1        "target",
+ 104   1        "hang",
+ 105   1        "hello",
+ 106   1        "wonder",
+ 107   1        "year",
+ 108   1        "right",
+ 109   1        "tactic",
+ 110   1        "turn",
+ 111   1        "false",
+ 112   1        "coding",
+ 113   1        "game",
+ 114   1        "group",
+ 115   1        "source",
+ 116   1        "help",
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 13:40:12 PAGE 3   
+
+ 117   1        "start",
+ 118   1        "object",
+ 119   1        "real"};
+ 120   1        unsigned char len[100];
+ 121   1        unsigned char letters[26];
+ 122   1        //Initialize port P1 for output from P1.7-P1.4
+ 123   1        P1 = 0x0F;
+ 124   1        for(i=0;i<100;i++)
+ 125   1          len[i]=4+(i%3);
+ 126   1        //Call initialization functions
+ 127   1        lcd_init();
+ 128   1        uart_init();
+ 129   1        for(j=0;j<100;j++)
+ 130   1        {
+ 131   2          for(i=0;i<26;i++)
+ 132   2            letters[i]=0;
+ 133   2          lcd_cmd(0x01);
+ 134   2          lcd_cmd(0x85);
+ 135   2          for(i=0;i<len[j];i++)
+ 136   2            lcd_write_char('_');
+ 137   2          lcd_cmd(0x0C1);
+ 138   2          lcd_write_string("Incorrect = 0");
+ 139   2          score = len[j];
+ 140   2          mistakes = 0;
+ 141   2        while((mistakes<6)&(score>0))
+ 142   2        {
+ 143   3            //Receive a character
+ 144   3            ch = receive_char();
+ 145   3            found=0;
+ 146   3            if(letters[(ch-'a')]==0)
+ 147   3            {
+ 148   4              letters[(ch-'a')]=1;
+ 149   4              for(i=0;i<6;i++)
+ 150   4              {
+ 151   5                if(words[j][i]==ch)
+ 152   5                {
+ 153   6                  found=1;
+ 154   6                  lcd_cmd(0x85+i);
+ 155   6                  lcd_write_char(ch);
+ 156   6                  score--;
+ 157   6                }
+ 158   5              }
+ 159   4              if(found==0)
+ 160   4                mistakes++;
+ 161   4            } 
+ 162   3            lcd_cmd(0x0CD);
+ 163   3            lcd_write_char(mistakes+48);
+ 164   3        }
+ 165   2        msdelay(500);
+ 166   2        lcd_cmd(0x01);
+ 167   2        lcd_cmd(0x84);
+ 168   2        if(score==0)
+ 169   2          lcd_write_string("You Win!");
+ 170   2        else
+ 171   2          lcd_write_string("You Lose");
+ 172   2        msdelay(2000);
+ 173   2        }
+ 174   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1005    ----
+C51 COMPILER V9.60.0.0   MAIN                                                              04/12/2021 13:40:12 PAGE 4   
+
+   CONSTANT SIZE    =    632    ----
+   XDATA SIZE       =   ----     143
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
